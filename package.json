@@ -1,0 +1,14 @@
+{
+  "name": "xeneon-edge-mac",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Corsair Xeneon Edge 전용 대시보드 (날씨 + 공부 계획 달력)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "electron": "^45.3.4"
+  }
+}
