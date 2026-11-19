@@ -10,6 +10,7 @@ const WMO = [[0, '☀️', '맑음'], [2, '🌤️', '구름 조금'], [3, '☁�
   [67, '🌧️', '비'], [77, '❄️', '눈'], [82, '🌦️', '소나기'], [86, '🌨️', '눈 소나기'], [99, '⛈️', '뇌우']];
 const wmo = (c) => WMO.find(([max]) => c <= max) || WMO[WMO.length - 1];
 const hm = (iso) => iso.slice(11, 16);
+const HOURS = [11, 12, 13, 18, 19]; // 오늘 보여줄 시간대
 
 let ipLoc; // 설정에 위치가 없으면 IP로 한 번만 조회
 async function getLocation() {
@@ -25,12 +26,14 @@ async function getLocation() {
 async function renderWeather() {
   try {
     const loc = await getLocation();
-    const q = new URLSearchParams({ latitude: loc.lat, longitude: loc.lon, timezone: 'auto', forecast_days: 4, wind_speed_unit: 'ms',
+    const q = new URLSearchParams({ latitude: loc.lat, longitude: loc.lon, timezone: 'auto', forecast_days: 2, wind_speed_unit: 'ms',
       current: 'temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m',
+      hourly: 'temperature_2m,weather_code,precipitation_probability,is_day',
       daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset' });
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?${q}`);
     if (!res.ok) throw new Error(`날씨 API ${res.status}`);
-    const { current: c, daily: d } = await res.json();
+    const { current: c, daily: d, hourly: h } = await res.json();
+    const nowHour = new Date().getHours();
     const [, icon, desc] = wmo(c.weather_code);
     const r = Math.round;
     $('weather').innerHTML = `
@@ -41,11 +44,17 @@ async function renderWeather() {
         <div class="meta"><span>일출<b>${hm(d.sunrise[0])}</b></span><span>일몰<b>${hm(d.sunset[0])}</b></span>
           <span>바람<b>${c.wind_speed_10m} m/s</b></span><span>습도<b>${c.relative_humidity_2m}%</b></span></div>
       </div>
-      <div class="days">${[1, 2, 3].map((i) => `
-        <div class="card day"><span>${new Date(d.time[i] + 'T00:00').toLocaleDateString('ko-KR', { weekday: 'long', day: 'numeric' })}</span>
-          <span class="i">${wmo(d.weather_code[i])[1]}</span>
-          <span class="t">${r(d.temperature_2m_max[i])}° | ${r(d.temperature_2m_min[i])}°</span></div>`).join('')}
-      </div>`;
+      <div class="hours">${HOURS.map((hr) => {
+        const i = h.time.indexOf(`${d.time[0]}T${String(hr).padStart(2, '0')}:00`); // hourly는 오늘 00시부터 시작
+        return `<div class="card hour${hr < nowHour ? ' past' : ''}">
+          <span class="h">${hr < 12 ? '오전' : '오후'} ${hr % 12 || 12}시</span>
+          <span class="i">${!h.is_day[i] && h.weather_code[i] <= 2 ? '🌙' : wmo(h.weather_code[i])[1]}</span>
+          <span class="t">${r(h.temperature_2m[i])}°</span>
+          <span class="p">💧 ${h.precipitation_probability[i] ?? '-'}%</span></div>`;
+      }).join('')}</div>
+      <div class="card day"><span>내일 ${new Date(d.time[1] + 'T00:00').toLocaleDateString('ko-KR', { weekday: 'long' })}</span>
+        <span class="i">${wmo(d.weather_code[1])[1]}</span>
+        <span class="t">${r(d.temperature_2m_max[1])}° | ${r(d.temperature_2m_min[1])}°</span></div>`;
   } catch (e) {
     $('weather').innerHTML = `<div class="card err">날씨를 불러오지 못했어요: ${esc(e.message)}<br>잠시 후 다시 시도합니다.</div>`;
   }
