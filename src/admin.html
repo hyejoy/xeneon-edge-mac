@@ -1,69 +1,203 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://geocoding-api.open-meteo.com">
-<title>Admin</title>
-<style>
-  * { box-sizing: border-box; }
-  body { color-scheme: dark; margin: 0; padding: 28px 36px; background: #0d1018; color: #e8ecf4; font: 15px -apple-system, 'Apple SD Gothic Neo', sans-serif; }
-  h1 { font-size: 22px; margin: 0 0 20px; } h2 { font-size: 16px; color: #8f9bb3; margin: 28px 0 12px; }
-  form, .loc { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  input, button { font: inherit; color: inherit; background: #151a26; border: 1px solid #2a3346; border-radius: 8px; padding: 8px 12px; }
-  input[name=title] { flex: 1; min-width: 240px; }
-  button { cursor: pointer; } button.primary { background: #6f9cff; border-color: #6f9cff; color: #07090f; font-weight: 600; }
-  .swatches { display: flex; gap: 6px; }
-  .swatches label { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-  .swatches input { display: none; } .swatches input:checked + label { border-color: #fff; }
-  table { width: 100%; border-collapse: collapse; } td { padding: 10px 8px; border-bottom: 1px solid #1d2433; }
-  td.dot span { display: inline-block; width: 14px; height: 14px; border-radius: 50%; }
-  td.act { text-align: right; white-space: nowrap; } td.act button { padding: 4px 10px; margin-left: 4px; }
-  .muted { color: #6b7690; } #results button { margin: 4px 4px 0 0; }
-  nav { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid #1d2433; }
-  nav button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 10px 16px; font-size: 16px; color: #8f9bb3; }
-  nav button.on { color: #e8ecf4; border-bottom-color: #6f9cff; font-weight: 600; }
-  textarea { flex: 1; min-width: 300px; min-height: 90px; font: inherit; color: inherit; background: #151a26; border: 1px solid #2a3346; border-radius: 8px; padding: 10px 12px; }
-  td.memo { white-space: pre-wrap; }
-  td.grip { width: 24px; color: #6b7690; cursor: grab; } tr.dragging { opacity: .4; }
-</style>
-</head>
-<body>
-<nav id="tabs"><button data-tab="plans" class="on">📅 공부계획관리</button><button data-tab="memos">📝 메모관리</button></nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://geocoding-api.open-meteo.com"
+    />
+    <title>Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        color-scheme: dark;
+        margin: 0;
+        padding: 28px 36px;
+        background: #0d1018;
+        color: #e8ecf4;
+        font:
+          15px -apple-system,
+          "Apple SD Gothic Neo",
+          sans-serif;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 20px;
+      }
+      h2 {
+        font-size: 16px;
+        color: #8f9bb3;
+        margin: 28px 0 12px;
+      }
+      form,
+      .loc {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      input,
+      button {
+        font: inherit;
+        color: inherit;
+        background: #151a26;
+        border: 1px solid #2a3346;
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+      input[name="title"] {
+        flex: 1;
+        min-width: 240px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button.primary {
+        background: #6f9cff;
+        border-color: #6f9cff;
+        color: #07090f;
+        font-weight: 600;
+      }
+      .swatches {
+        display: flex;
+        gap: 6px;
+      }
+      .swatches label {
+        width: 26px;
+        height: 26 px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      .swatches input {
+        display: none;
+      }
+      .swatches input:checked + label {
+        border-color: #fff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #1d2433;
+      }
+      td.dot span {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+      }
+      td.act {
+        text-align: right;
+        white-space: nowrap;
+      }
+      td.act button {
+        padding: 4px 10px;
+        margin-left: 4px;
+      }
+      .muted {
+        color: #6b7690;
+      }
+      #results button {
+        margin: 4px 4px 0 0;
+      }
+      nav {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid #1d2433;
+      }
+      nav button {
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        background: none;
+        padding: 10px 16px;
+        font-size: 16px;
+        color: #8f9bb3;
+      }
+      nav button.on {
+        color: #e8ecf4;
+        border-bottom-color: #6f9cff;
+        font-weight: 600;
+      }
+      textarea {
+        flex: 1;
+        min-width: 300px;
+        min-height: 90px;
+        font: inherit;
+        color: inherit;
+        background: #151a26;
+        border: 1px solid #2a3346;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      td.memo {
+        white-space: pre-wrap;
+      }
+      td.grip {
+        width: 24px;
+        color: #6b7690;
+        cursor: grab;
+      }
+      tr.dragging {
+        opacity: 0.4;
+      }
+    </style>
+  </head>
+  <body>
+    <nav id="tabs">
+      <button data-tab="plans" class="on">📅 공부계획관리</button
+      ><button data-tab="memos">📝 메모관리</button>
+    </nav>
 
-<section id="tab-plans">
-<form id="form">
-  <input type="hidden" name="pid">
-  <input name="title" placeholder="계획 (예: 자바 중급 1편)" required>
-  <input type="date" name="start" required> ~ <input type="date" name="end" required>
-  <div class="swatches" id="swatches"></div>
-  <button class="primary" id="submit">추가</button>
-  <button type="button" id="cancel" hidden>취소</button>
-</form>
+    <section id="tab-plans">
+      <form id="form">
+        <input type="hidden" name="pid" />
+        <input name="title" placeholder="계획 (예: 자바 중급 1편)" required />
+        <input type="date" name="start" required /> ~
+        <input type="date" name="end" required />
+        <div class="swatches" id="swatches"></div>
+        <button class="primary" id="submit">추가</button>
+        <button type="button" id="cancel" hidden>취소</button>
+      </form>
 
-<h2>등록된 계획</h2>
-<table><tbody id="list"></tbody></table>
-</section>
+      <h2>등록된 계획</h2>
+      <table>
+        <tbody id="list"></tbody>
+      </table>
+    </section>
 
-<section id="tab-memos" hidden>
-<form id="memoForm">
-  <input type="hidden" name="pid">
-  <textarea name="text" placeholder="메모 (여러 줄 가능)" required></textarea>
-  <div class="swatches" id="memoSwatches"></div>
-  <button class="primary" id="memoSubmit">추가</button>
-  <button type="button" id="memoCancel" hidden>취소</button>
-</form>
-<h2>등록된 메모</h2>
-<table><tbody id="memoList"></tbody></table>
-</section>
+    <section id="tab-memos" hidden>
+      <form id="memoForm">
+        <input type="hidden" name="pid" />
+        <textarea
+          name="text"
+          placeholder="메모 (여러 줄 가능)"
+          required
+        ></textarea>
+        <div class="swatches" id="memoSwatches"></div>
+        <button class="primary" id="memoSubmit">추가</button>
+        <button type="button" id="memoCancel" hidden>취소</button>
+      </form>
+      <h2>등록된 메모</h2>
+      <table>
+        <tbody id="memoList"></tbody>
+      </table>
+    </section>
 
-<h2>날씨 위치</h2>
-<div class="loc">
-  <span>현재: <b id="cur"></b></span>
-  <input id="q" placeholder="동네/도시 검색 (예: 사당동, 수원)">
-  <button type="button" id="search">검색</button>
-  <button type="button" id="auto">자동(IP)으로</button>
-</div>
-<div id="results"></div>
-<script src="admin.js"></script>
-</body>
+    <h2>날씨 위치</h2>
+    <div class="loc">
+      <span>현재: <b id="cur"></b></span>
+      <input id="q" placeholder="동네/도시 검색 (예: 사당동, 수원)" />
+      <button type="button" id="search">검색</button>
+      <button type="button" id="auto">자동(IP)으로</button>
+    </div>
+    <div id="results"></div>
+    <script src="admin.js"></script>
+  </body>
 </html>
