@@ -3,6 +3,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 const COLORS = ['#f6df94', '#bfd8f6', '#f5b8c4', '#bfe6c6', '#d6c6f5', '#f8c99b']; // 계획표 파스텔 톤
 const form = $('form'), memoForm = $('memoForm');
 let data = { plans: [], memos: [], location: null };
+const sel = { plans: new Set(), memos: new Set() }; // 다중 선택된 id
 
 for (const [el, pre] of [['swatches', 'c'], ['memoSwatches', 'm']]) {
   $(el).innerHTML = COLORS.map((c, i) =>
@@ -12,22 +13,47 @@ for (const [el, pre] of [['swatches', 'c'], ['memoSwatches', 'm']]) {
 $('tabs').onclick = (e) => {
   const tab = e.target.dataset.tab; if (!tab) return;
   for (const b of $('tabs').children) b.classList.toggle('on', b === e.target);
-  for (const t of ['plans', 'memos']) $(`tab-${t}`).hidden = t !== tab;
+  for (const t of ['plans', 'memos', 'location']) $(`tab-${t}`).hidden = t !== tab;
 };
 
 function render() {
   const plans = [...data.plans].sort((a, b) => a.start.localeCompare(b.start));
   $('list').innerHTML = plans.length ? plans.map((p) => `
-    <tr><td class="dot"><span style="background:${esc(p.color)}"></span></td>
+    <tr>${chk('plans', p.id)}<td class="dot"><span style="background:${esc(p.color)}"></span></td>
       <td>${esc(p.title)}</td><td class="muted">${p.start} ~ ${p.end}</td>
       <td class="act"><button data-edit="${p.id}">수정</button><button data-del="${p.id}">삭제</button></td></tr>`).join('')
     : '<tr><td class="muted">아직 계획이 없어요.</td></tr>';
   $('memoList').innerHTML = data.memos.length ? data.memos.map((m) => `
-    <tr draggable="true" data-id="${m.id}"><td class="grip" title="드래그해서 순서 변경">⠿</td>
+    <tr draggable="true" data-id="${m.id}">${chk('memos', m.id)}<td class="grip" title="드래그해서 순서 변경">⠿</td>
       <td class="dot"><span style="background:${esc(m.color)}"></span></td><td class="memo">${esc(m.text)}</td>
       <td class="act"><button data-up="${m.id}" aria-label="위로">▲</button><button data-down="${m.id}" aria-label="아래로">▼</button><button data-edit="${m.id}">수정</button><button data-del="${m.id}">삭제</button></td></tr>`).join('')
     : '<tr><td class="muted">아직 메모가 없어요.</td></tr>';
   $('cur').textContent = data.location ? data.location.name : '자동(IP 기반)';
+  syncBulk('plans'); syncBulk('memos');
+}
+
+// ---------- 다중 선택 삭제 ----------
+const BULK = { plans: ['list', 'allPlans', 'delPlans', '계획'], memos: ['memoList', 'allMemos', 'delMemos', '메모'] };
+const chk = (kind, id) => `<td class="chk"><input type="checkbox" data-sel="${id}"${sel[kind].has(id) ? ' checked' : ''} aria-label="선택"></td>`;
+function syncBulk(kind) {
+  const [, all, del] = BULK[kind], ids = new Set(data[kind].map((x) => x.id));
+  for (const id of sel[kind]) if (!ids.has(id)) sel[kind].delete(id); // 지워진 항목은 선택에서 제외
+  const n = sel[kind].size;
+  $(del).textContent = n ? `선택 삭제 (${n})` : '선택 삭제'; $(del).disabled = !n;
+  $(all).checked = n > 0 && n === ids.size; $(all).indeterminate = n > 0 && n < ids.size;
+}
+for (const [kind, [list, all, del, label]] of Object.entries(BULK)) {
+  $(list).addEventListener('change', (e) => {
+    const id = e.target.dataset.sel; if (!id) return;
+    e.target.checked ? sel[kind].add(id) : sel[kind].delete(id);
+    syncBulk(kind);
+  });
+  $(all).onchange = (e) => { sel[kind] = new Set(e.target.checked ? data[kind].map((x) => x.id) : []); render(); };
+  $(del).onclick = () => {
+    if (!confirm(`선택한 ${label} ${sel[kind].size}개를 삭제할까요?`)) return;
+    save({ [kind]: data[kind].filter((x) => !sel[kind].has(x.id)) });
+    sel[kind].clear();
+  };
 }
 
 const save = (patch) => store.save({ ...data, ...patch });
@@ -42,6 +68,8 @@ form.onsubmit = (e) => {
   resetForm();
 };
 $('cancel').onclick = resetForm;
+// 시작일을 종료일보다 뒤로 바꾸면 종료일도 시작일에 맞춘다
+form.start.onchange = () => { if (form.end.value && form.end.value < form.start.value) form.end.value = form.start.value; };
 
 $('list').onclick = (e) => {
   const { edit, del } = e.target.dataset;
