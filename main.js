@@ -2,7 +2,8 @@ const { app, BrowserWindow, Menu, ipcMain, screen } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DATA_FILE = path.join(app.getPath('userData'), 'data.json');
+// 앱 이름(productName)과 무관하게 기존 폴더 고정 → npm start와 .app이 같은 데이터를 쓴다
+const DATA_FILE = path.join(app.getPath('appData'), 'xeneon-edge-mac', 'data.json');
 const EMPTY = { plans: [], memos: [], location: null };
 
 function load() {

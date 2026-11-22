@@ -6,9 +6,12 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "package": "electron-packager . \"Xeneon Edge\" --platform=darwin --arch=arm64 --out=dist --overwrite --ignore=\"^/(dist|test)\""
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
     "electron": "^45.3.4"
-  }
+  },
+  "productName": "Xeneon Edge"
 }
