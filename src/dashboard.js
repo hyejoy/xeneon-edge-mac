@@ -89,6 +89,15 @@ function renderMemo() {
     `<div class="note" style="background:${esc(m.color)}">${esc(m.text)}</div>`).join('') || '<p style="color:#6b7690;font-size:20px">Admin → 메모관리에서 추가하세요</p>'}`;
 }
 
+// ---------- 시계 ----------
+const tick = () => {
+  const n = new Date(), p = (x) => String(x).padStart(2, '0');
+  const h = n.getHours();
+  $('clock').innerHTML = `${h % 12 || 12}:${p(n.getMinutes())}:${p(n.getSeconds())}<small>${h < 12 ? 'AM' : 'PM'}</small>`;
+  setTimeout(tick, 1000 - n.getMilliseconds()); // 초 경계에 맞춰 갱신
+};
+tick();
+
 let lastDay;
 setInterval(() => { // 자정이 지나면 오늘 표시/월을 갱신
   const d = new Date().getDate();
