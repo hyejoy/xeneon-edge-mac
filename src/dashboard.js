@@ -97,7 +97,7 @@ function renderCalendar() {
   );
   const weeks = Cal.monthLayout(y, m, data.plans);
   $("cal").innerHTML = `
-    <div class="head"><h1><b>${m}월</b> ${y}</h1>
+    <div class="head"><h1><b>${y}년 </b>${m}월</h1>
       <span>${now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" })}</span></div>
     <div class="dow">${"일월화수목금토"
       .split("")
